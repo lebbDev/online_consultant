@@ -1,92 +1,91 @@
-import * as React from "react"
-import { Check, ChevronsUpDown } from "lucide-react"
+import * as React from "react";
 
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
 import {
   Command,
   CommandEmpty,
-  CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+} from "@/components/ui/command"; // Убедитесь, что путь к вашим компонентам верный
 
-const symptoms = [
-  {
-    value: "next.js",
-    label: "Next.js",
-  },
-  {
-    value: "sveltekit",
-    label: "SvelteKit",
-  },
-  {
-    value: "nuxt.js",
-    label: "Nuxt.js",
-  },
-  {
-    value: "remix",
-    label: "Remix",
-  },
-  {
-    value: "astro",
-    label: "Astro",
-  },
-]
+// 1. Определяем тип для элементов
+interface ItemType {
+  value: string;
+  label: string;
+}
+
+// 2. Типизируем наш полный список данных
+const ALL_ITEMS: ItemType[] = [
+  { value: "apple", label: "Яблоко" },
+  { value: "banana", label: "Банан" },
+  { value: "orange", label: "Апельсин" },
+  { value: "grape", label: "Виноград" },
+  { value: "pineapple", label: "Ананас" },
+  { value: "strawberry", label: "Клубника" },
+  { value: "blueberry", label: "Голубика" },
+  { value: "raspberry", label: "Малина" },
+  { value: "mango", label: "Манго" },
+  { value: "kiwi", label: "Киви" },
+  // ... добавьте сюда много элементов
+];
 
 export function SymptomsSelector() {
-  const [open, setOpen] = React.useState(false)
-  const [value, setValue] = React.useState("")
+  const [inputValue, setInputValue] = React.useState<string>("");
+  // 3. Типизируем состояние filteredItems
+  const [filteredItems, setFilteredItems] = React.useState<ItemType[]>([]);
+
+  React.useEffect(() => {
+    if (inputValue.trim() === "") {
+      setFilteredItems([]);
+      return;
+    }
+
+    // 4. Тип item в filter будет выведен корректно, но можно и явно указать (item: ItemType)
+    const results = ALL_ITEMS.filter((item) =>
+      item.label.toLowerCase().includes(inputValue.toLowerCase())
+    );
+    setFilteredItems(results);
+  }, [inputValue]);
+
+  // 5. Типизируем параметр selectedValue и логику поиска
+  const handleSelect = (selectedValue: string) => {
+    // selectedValue - это то, что было передано в prop 'value' компонента CommandItem
+    const item = ALL_ITEMS.find(i => i.value === selectedValue);
+
+    if (item) {
+      console.log("Выбрано:", item.label);
+      // Здесь можно сделать что-то с выбранным элементом (item)
+      setInputValue(""); // Очистить инпут после выбора (опционально)
+    }
+  };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="w-[200px] justify-between"
-        >
-          {value
-            ? symptoms.find((framework) => framework.value === value)?.label
-            : "Выберите симптомы..."}
-          <ChevronsUpDown className="opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0">
-        <Command>
-          <CommandInput placeholder="Выберите симптомы..." className="h-9" />
-          <CommandList>
-            <CommandEmpty>Симптомы не найдены.</CommandEmpty>
-            <CommandGroup>
-              {symptoms.map((framework) => (
-                <CommandItem
-                  key={framework.value}
-                  value={framework.value}
-                  onSelect={(currentValue) => {
-                    setValue(currentValue === value ? "" : currentValue)
-                    setOpen(false)
-                  }}
-                >
-                  {framework.label}
-                  <Check
-                    className={cn(
-                      "ml-auto",
-                      value === framework.value ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
-  )
+    <Command className="rounded-lg border shadow-md">
+      <CommandInput
+        placeholder="Например, кашель..."
+        value={inputValue}
+        onValueChange={setInputValue}
+      />
+      <CommandList>
+        {inputValue.trim() !== "" && filteredItems.length === 0 && (
+          <CommandEmpty>Ничего не найдено.</CommandEmpty>
+        )}
+
+        {inputValue.trim() !== "" &&
+          // 6. Типизируем параметр item в map
+          filteredItems.map((item: ItemType) => (
+            <CommandItem
+              key={item.value}
+              // Важно: 'value' здесь должно быть строкой (или числом),
+              // которая будет передана в onSelect.
+              // Используем item.value, так как он обычно уникален.
+              value={item.value}
+              onSelect={handleSelect} // onSelect получит item.value
+            >
+              {item.label}
+            </CommandItem>
+          ))}
+      </CommandList>
+    </Command>
+  );
 }
