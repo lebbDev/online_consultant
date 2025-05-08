@@ -1,13 +1,9 @@
 import joblib
-from sklearn.pipeline import Pipeline
 import numpy as np
-import pandas as pd
-from sklearn.preprocessing import MultiLabelBinarizer, LabelEncoder
-from sklearn.model_selection import train_test_split
 from tensorflow.keras.models import load_model
 from scipy.stats import mode
 
-symptoms = [['кашель', 'головная боль', 'общая слабость', 'озноб', 'потеря аппетита', 'зуд в горле', 'головокружение', 'мокрота']]
+symptoms = [['раздражение в анусе']]
 
 random_symptoms_data = [
     ['кашель', 'головная боль', 'общая слабость', 'озноб', 'потеря аппетита', 'зуд в горле', 'головокружение', 'мокрота'],
@@ -19,6 +15,7 @@ random_symptoms_data = [
     ['изменение характера выделений из влагалища']
 ]
 
+# Загружаем модели
 mlb = joblib.load('models/mlb.pkl')
 lbe = joblib.load('models/lbe.pkl')
 
@@ -28,21 +25,26 @@ models.append(joblib.load('models/model_rf.pkl'))
 models.append(joblib.load('models/model_xgb.pkl'))
 models.append(load_model('models/model_mlp.keras'))
 
-
+# Получаем hard voiting прогноз с помощью моды
 symptoms_encode = mlb.transform(symptoms)
-# print(len(symptoms_encode))
-# print(len(symptoms_encode[0]))
-# print(symptoms_encode[0])
-# print(symptoms_encode[1])
-# Получаем предсказания от всех моделей
+
 predicts = [model.predict(symptoms_encode) for model in models]
 predicts[3] = np.array(np.argmax(predicts[3]))
+
 print(predicts)
+# predicts[3] = np.array(5)
+# predicts[2] = np.array(7)
 
 predicts_fixed = [np.array(p).ravel() for p in predicts]
-# # Преобразуем в (n_samples, n_models)
-preds_array = np.array(predicts_fixed).T
-print(preds_array)
-# Считаем моду (наиболее частое значение по строкам)
-final_preds = mode(preds_array, axis=1).mode.ravel()
-print(final_preds)
+predicts_transponent = np.array(predicts_fixed).T
+
+final_predict = mode(predicts_transponent, axis=1).mode.ravel()
+
+final_predict_spec = lbe.inverse_transform(final_predict)
+
+if predicts.count(final_predict) == 3 or predicts.count(final_predict) == 4:
+    print("Большая вероятность необходимости посещения данного специалиста:", final_predict_spec)
+elif predicts.count(final_predict) == 2:
+    print("Средняя вероятность необходимости посещения данного специалиста:", final_predict_spec)
+elif predicts.count(final_predict) == 1:
+    print("Программа не смогла определить для вас подходящего специалиста")
