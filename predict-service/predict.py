@@ -43,7 +43,7 @@ final_predict = mode(predicts_transponent, axis=1).mode.ravel()
 final_predict_spec = lbe.inverse_transform(final_predict)
 
 if predicts.count(final_predict) == 3 or predicts.count(final_predict) == 4:
-    print("Большая вероятность необходимости посещения данного специалиста:", final_predict_spec)
+    print("Высокая вероятность необходимости посещения данного специалиста:", final_predict_spec)
 elif predicts.count(final_predict) == 2:
     print("Средняя вероятность необходимости посещения данного специалиста:", final_predict_spec)
 elif predicts.count(final_predict) == 1:
