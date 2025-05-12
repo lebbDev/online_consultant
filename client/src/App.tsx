@@ -15,54 +15,47 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import CircularProgress from '@mui/material/CircularProgress';
 
 interface Symptom {
   value: string;
   label: string;
 }
 
-// const test: Symptom[] = [
-// ];
-
-const symptoms = [
-  { value: "кашель", label: "Кашель" },
-  { value: "головная боль", label: "Головная боль" },
-  { value: "общая слабость", label: "Общая слабость" },
-  { value: "озноб", label: "Озноб" },
-  { value: "потеря аппетита", label: "Потеря аппетита" },
-  { value: "зуд в горле", label: "Зуд в горле" },
-  { value: "головокружение", label: "Головокружение" },
-  {
-    value: "боль во время дефекации",
-    label: "Боль во время дефекации",
-  },
-  {
-    value: "изменение характера выделений из влагалища",
-    label: "Изменение характера выделений из влагалища",
-  },
-  {
-    value: "появление уплотнений или образований в молочных железах",
-    label: "Появление уплотнений или образований в молочных железах",
-  },
-  {
-    value: "красные, синие или фиолетовые сосудистые образования",
-    label: "Красные, синие или фиолетовые сосудистые образования",
-  },
-];
+interface Predict {
+  prob: string;
+  spec: string;
+  second_spec: string;
+}
 
 function App() {
   const [gender, setGender] = useState<string | null>(null);
   const [age, setAge] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
+
   const [UserSymptoms, setUserSymptoms] = useState<Symptom[]>([]);
+  const [SymptomsList, setSymptomsList] = useState<Symptom[]>([]);
   const [GetResult, setGetResult] = useState(false);
+  const [UserPredict, setUserPredict] = useState<Predict | null>(null);
 
   const handleConfirm = () => {
     if (gender && age) {
       setConfirmed(true);
+
       // получаем список симптомов
-      console.log(gender);
-      console.log(age);
+      fetch("http://localhost:8000/data", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          "gender": gender,
+          "age": age
+        })
+      })
+      .then(res => res.json())
+      .then(data => setSymptomsList(data))
+      .catch(err => console.error(err));
     }
   };
 
@@ -70,15 +63,29 @@ function App() {
     setGender(null);
     setAge(null);
     setConfirmed(false);
+
     setUserSymptoms([]);
+    setSymptomsList([])
     setGetResult(false);
+    setUserPredict(null)
   };
 
   const handleGetResult = () => {
-    if (UserSymptoms && age && gender) {
+    if (UserSymptoms) {
       setGetResult(true);
+      setUserPredict(null)
+      
       // отправляем симптомы
-      console.log(UserSymptoms);
+      fetch("http://localhost:8000/predict", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(UserSymptoms)
+      })
+      .then(res => res.json())
+      .then(data => setUserPredict(data))
+      .catch(err => console.error(err));
     }
   };
 
@@ -120,8 +127,8 @@ function App() {
               </Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="women" id="women" />
-              <Label htmlFor="women" className="text-base">
+              <RadioGroupItem value="woman" id="woman" />
+              <Label htmlFor="woman" className="text-base">
                 женщина
               </Label>
             </div>
@@ -137,13 +144,11 @@ function App() {
             onChange={(e) => {
               const val = e.target.value;
 
-              // Разрешаем пустое значение (чтобы можно было стереть)
               if (val === "") {
                 setAge(null);
                 return;
               }
 
-              // Разрешаем только целые числа от 0 до 120
               const num = Number(val);
               if (/^\d+$/.test(val) && num >= 0 && num <= 120) {
                 setAge(val);
@@ -180,7 +185,7 @@ function App() {
           className="mt-5 max-w-180"
           multiple
           id="tags-outlined"
-          options={symptoms ?? ""}
+          options={SymptomsList ?? ""}
           getOptionLabel={(option) => option.label}
           filterSelectedOptions
           noOptionsText="Симптомы не найдены"
@@ -206,16 +211,32 @@ function App() {
           Получить результат
         </Button>
       </div>
-      {GetResult ? (
+      {
+      GetResult && !UserPredict ? (
+        <div className="mt-[100px] max-w-115 relative">
+          <CircularProgress className="absolute right-0" />
+        </div>
+      )
+      : GetResult && UserPredict ? (
         <Card className="mt-10 max-w-230">
           <CardHeader>
             <CardTitle className="text-2xl">Ваш результат на основе выбранных симптомов</CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-xl underline underline-offset-4">Высокая вероятность необходимости посещения специалиста - НЕВРОЛОГ</p>
+          <CardContent className="text-xl underline underline-offset-6">
+            {
+              UserPredict.prob === "high" ? (
+                <p>Высокая вероятность необходимости посещения специалиста - <span className="font-bold">{UserPredict.spec}</span></p>
+              )
+              : UserPredict.prob === "average" ? (
+                <p>Средняя вероятность необходимости посещения специалиста - <span className="font-bold">{UserPredict.spec}</span></p>
+              )
+              : (
+                <p>Программа не может точно сказать к какому специалисту Вам обратиться. Возможно стоит добавить больше симптомов.</p>
+              )
+            }
           </CardContent>
           <CardFooter>
-            <p>*Если у вас возникают сомнения о правильности выбранного специалиста, Вы можете обратиться к Терапевту или к врачу общей практики (ВОП) для более точной диагностики.</p>
+            <p>Если у вас возникают сомнения Вы можете обратиться к <span className="font-bold">{UserPredict.second_spec + "у"}</span> или к врачу общей практики <span className="font-bold">(ВОП)</span> для более точной диагностики.</p>
           </CardFooter>
         </Card>
       )
