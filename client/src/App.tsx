@@ -16,6 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import CircularProgress from '@mui/material/CircularProgress';
+import pharmacyIcon from "@/assets/pharmacy.png";
 
 interface Symptom {
   value: string;
@@ -91,17 +92,34 @@ function App() {
 
   return (
     <div className="p-4 pl-10 pr-10 h-[1000px]">
-      <Card className="bg-blue-400 text-white max-w-[500px]">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold">
-            ОНЛАЙН-КОНСУЛЬТАНТ
-          </CardTitle>
-          <CardDescription className="text-xl text-white">
-            по направлению к медицинским специалистам
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <div className="flex relative h-25">
+        <div className="absolute left-0">
+          <Card className="bg-blue-400 text-white min-w-[500px]">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold">
+                ОНЛАЙН-КОНСУЛЬТАНТ
+              </CardTitle>
+              <CardDescription className="text-xl text-white">
+                по направлению к медицинским специалистам
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
 
+        <div className="absolute right-0">
+          <Card className= "border-red-500 border-5 min-w-[300px] h-[120px]">
+            <CardHeader>
+              <CardTitle className="text-4xl font-bold">
+                <div className="flex relative">
+                  <p className="text-red-500">ДокЗнаток</p>
+                  <img src={pharmacyIcon} alt="pharmacyIcon" className="absolute right-0 bottom-[-25px] w-[43px] h-[43px]" />
+                </div>
+              </CardTitle>
+            </CardHeader>
+          </Card>
+        </div>
+      </div>
+    
       <div className="flex relative mt-9 max-w-[393px]">
         <h2 className="text-xl font-medium">Введите ваши данные:</h2>
         <div className="flex absolute right-0 bottom-0">
@@ -211,39 +229,48 @@ function App() {
           Получить результат
         </Button>
       </div>
-      {
-      GetResult && !UserPredict ? (
+      {GetResult && !UserPredict ? (
         <div className="mt-[100px] max-w-115 relative">
           <CircularProgress className="absolute right-0" />
         </div>
-      )
-      : GetResult && UserPredict ? (
+      ) : GetResult && UserPredict ? (
         <Card className="mt-10 max-w-230">
           <CardHeader>
-            <CardTitle className="text-2xl">Ваш результат на основе выбранных симптомов</CardTitle>
+            <CardTitle className="text-2xl">
+              Ваш результат на основе выбранных симптомов
+            </CardTitle>
           </CardHeader>
           <CardContent className="text-xl underline underline-offset-6">
-            {
-              UserPredict.prob === "high" ? (
-                <p>Высокая вероятность необходимости посещения специалиста - <span className="font-bold">{UserPredict.spec}</span></p>
-              )
-              : UserPredict.prob === "average" ? (
-                <p>Средняя вероятность необходимости посещения специалиста - <span className="font-bold">{UserPredict.spec}</span></p>
-              )
-              : (
-                <p>Программа не может точно сказать к какому специалисту Вам обратиться. Возможно стоит добавить больше симптомов.</p>
-              )
-            }
+            {UserPredict.prob === "high" ? (
+              <p>
+                Высокая вероятность необходимости посещения специалиста {" "}
+                <span className="font-bold">{UserPredict.spec + "a"}</span>
+              </p>
+            ) : UserPredict.prob === "average" ? (
+              <p>
+                Средняя вероятность необходимости посещения специалиста {" "}
+                <span className="font-bold">{UserPredict.spec + "a"}</span>
+              </p> 
+            ) : (
+              <p>
+                Программа не может точно сказать к какому специалисту Вам
+                обратиться. Возможно стоит добавить больше симптомов.
+              </p>
+            )}
           </CardContent>
           <CardFooter>
-            <p>Если у вас возникают сомнения Вы можете обратиться к <span className="font-bold">{UserPredict.second_spec + "у"}</span> или к врачу общей практики <span className="font-bold">(ВОП)</span> для более точной диагностики.</p>
+            <p>
+              Если у вас возникают сомнения Вы можете обратиться к{" "}
+              <span className="font-bold">{UserPredict.second_spec + "у"}</span>{" "}
+              или к врачу общей практики{" "}
+              <span className="font-bold">(ВОП)</span> для более точной
+              диагностики.
+            </p>
           </CardFooter>
         </Card>
-      )
-      : (
+      ) : (
         <div></div>
-      )
-      }
+      )}
     </div>
   );
 }
