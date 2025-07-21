@@ -1,3 +1,5 @@
 venv/
+
 server/.env
 server/__pycache__/
+server/predict-service/__pycache__/
