@@ -40,13 +40,16 @@ function App() {
 
   const isFormValid = gender && age;
 
+  const host = import.meta.env.VITE_API_HOST;
+  const port = import.meta.env.VITE_API_PORT;
+
   const handleConfirm = () => {
     if (!isFormValid) return;
 
     setConfirmed(true);
 
     // получаем список симптомов
-    fetch("http://localhost:8000/data", {
+    fetch(`http://${host}:${port}/data`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -78,7 +81,7 @@ function App() {
     setPredictResult(null)
       
     // отправляем симптомы
-    fetch("http://localhost:8000/predict", {
+    fetch(`http://${host}:${port}/predict`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

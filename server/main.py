@@ -1,4 +1,6 @@
+import os
 import sys
+from dotenv import load_dotenv
 from pathlib import Path
 import json
 from fastapi import FastAPI
@@ -9,11 +11,16 @@ from typing import List
 sys.path.append(str(Path(__file__).resolve().parent / "predict-service"))
 from predict import predict_spec
 
+load_dotenv()
+
+host = os.getenv("HOST")
+port = os.getenv("REACT_PORT")
+
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[f"http://{host}:{port}"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
